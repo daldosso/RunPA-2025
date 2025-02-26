@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:runpa/menu.dart';
-import 'package:runpa/pages/athletes.dart';
 import 'package:runpa/routes.dart';
 
 class HomePage extends StatelessWidget {
@@ -94,7 +93,9 @@ class MyGridView {
           }),
           getStructuredGridCell("Eventi", Icons.alarm, () {}),
           getStructuredGridCell("Challenge run", Icons.directions_run, () {}),
-          getStructuredGridCell("Foto", Icons.photo_camera, () {}),
+          getStructuredGridCell("Foto", Icons.photo_camera, () {
+            Navigator.pushNamed(context, AppRoutes.takePicture);
+          }),
         ],
       ),
     );
