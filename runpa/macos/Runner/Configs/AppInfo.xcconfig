@@ -8,7 +8,7 @@
 PRODUCT_NAME = runpa
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.runpa
+PRODUCT_BUNDLE_IDENTIFIER = com.adaldosso.runpa
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.adaldosso. All rights reserved.

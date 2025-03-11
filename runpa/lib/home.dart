@@ -31,7 +31,7 @@ class Body {
           children: <Widget>[
             Container(
                 margin: const EdgeInsets.all(20.0),
-                child: Image(image: AssetImage('data/img/logo_top.png'))),
+                child: Image(image: AssetImage('assets/img/logo_top.png'))),
             myGridView.build(context)
           ],
         ));
@@ -92,7 +92,9 @@ class MyGridView {
             Navigator.pushNamed(context, AppRoutes.athletes);
           }),
           getStructuredGridCell("Eventi", Icons.alarm, () {}),
-          getStructuredGridCell("Challenge run", Icons.directions_run, () {}),
+          getStructuredGridCell("Challenge run", Icons.directions_run, () {
+            Navigator.pushNamed(context, AppRoutes.challengeRun);
+          }),
           getStructuredGridCell("Foto", Icons.photo_camera, () {
             Navigator.pushNamed(context, AppRoutes.takePicture);
           }),
