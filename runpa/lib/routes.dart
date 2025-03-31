@@ -30,9 +30,18 @@ class AppRoutes {
         );
 
       default:
+        final uri = Uri.parse(settings.name ?? '');
+        final authCode = uri.queryParameters['code'];
+
+        if (authCode != null) {
+          return MaterialPageRoute(
+            builder: (context) => ChallengeRunScreen(authCode: authCode),
+          );
+        }
+
         return MaterialPageRoute(
           builder: (context) => Scaffold(
-            body: Center(child: Text("404 - Pagina non trovata")),
+            body: Center(child: Text("404 - Pagina non trovata, ${settings.name}")),
           ),
         );
     }

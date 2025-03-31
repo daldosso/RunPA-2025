@@ -36,7 +36,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data
                     android:scheme="com.adaldosso.runpa"
-                    android:host="callback"/>
+                    android:host="oauthredirect"/>
             </intent-filter>
 
         </activity>

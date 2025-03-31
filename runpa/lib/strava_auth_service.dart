@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
@@ -6,16 +5,17 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class StravaAuthService {
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
+  final clientId = dotenv.env['STRAVA_CLIENT_ID'] ?? '';
+  final redirectUri = dotenv.env['STRAVA_REDIRECT_URI'] ?? '';
+  final backendUrl = dotenv.env['BACKEND_URL'] ?? '';
+  final authorizationEndpoint = dotenv.env['STRAVA_AUTHORIZATION_ENDPOINT'] ?? '';
+  late final String tokenEndpoint = "$backendUrl/strava/exchange_token";
+
   final FlutterAppAuth appAuth = FlutterAppAuth();
-  static final String backendUrl = dotenv.env['BACKEND_URL'] ?? '';
-  final String clientId = dotenv.env['STRAVA_CLIENT_ID'] ?? '';
-  final String redirectUri = dotenv.env['STRAVA_REDIRECT_URI'] ?? '';
-  final String authorizationEndpoint = dotenv.env['STRAVA_AUTHORIZATION_ENDPOINT'] ?? '';
-  final String tokenEndpoint = "$backendUrl/strava/exchange_token";
 
   Future<String?> getAuthorizationCode() async {
-    final AuthorizationResponse? result = await appAuth.authorize(
+    final result = await appAuth.authorize(
       AuthorizationRequest(
         clientId,
         redirectUri,
@@ -23,7 +23,7 @@ class StravaAuthService {
           authorizationEndpoint: authorizationEndpoint,
           tokenEndpoint: tokenEndpoint,
         ),
-        scopes: ["activity:read_all"],
+        scopes: ['activity:read_all'],
       ),
     );
     return result?.authorizationCode;
@@ -37,29 +37,39 @@ class StravaAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      await secureStorage.write(key: "access_token", value: data["access_token"]);
-      await secureStorage.write(key: "refresh_token", value: data["refresh_token"]);
-      await secureStorage.write(
-          key: "expires_at",
-          value: DateTime.fromMillisecondsSinceEpoch(data["expires_at"] * 1000).toIso8601String());
+      final data = jsonDecode(response.body);
+      await _storeTokenData(data);
       return data["access_token"];
-    } else {
-      return null;
     }
+    return null;
+  }
+
+  Future<void> _storeTokenData(Map<String, dynamic> data) async {
+    await storage.write(key: "access_token", value: data["access_token"]);
+    await storage.write(key: "refresh_token", value: data["refresh_token"]);
+    await storage.write(
+      key: "expires_at",
+      value: DateTime.fromMillisecondsSinceEpoch(data["expires_at"] * 1000)
+          .toIso8601String(),
+    );
   }
 
   Future<String?> getAccessToken() async {
-    final accessToken = await secureStorage.read(key: "access_token");
-    if (accessToken != null) {
-      return accessToken;
-    } else {
+    final expiresAtString = await storage.read(key: "expires_at");
+    if (expiresAtString == null) return null;
+
+    final expiresAt = DateTime.parse(expiresAtString);
+    final now = DateTime.now();
+
+    if (now.isAfter(expiresAt)) {
       return await refreshToken();
     }
+
+    return await storage.read(key: "access_token");
   }
 
   Future<String?> refreshToken() async {
-    final refreshToken = await secureStorage.read(key: "refresh_token");
+    final refreshToken = await storage.read(key: "refresh_token");
     if (refreshToken == null) return null;
 
     final response = await http.post(
@@ -69,15 +79,21 @@ class StravaAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      await secureStorage.write(key: "access_token", value: data["access_token"]);
-      await secureStorage.write(key: "refresh_token", value: data["refresh_token"]);
-      await secureStorage.write(
-          key: "expires_at",
-          value: DateTime.fromMillisecondsSinceEpoch(data["expires_at"] * 1000).toIso8601String());
+      final data = jsonDecode(response.body);
+      await _storeTokenData(data);
       return data["access_token"];
-    } else {
-      return null;
     }
+    return null;
+  }
+
+  Future<String?> getValidAccessToken() async {
+    final expiresAtString = await storage.read(key: "expires_at");
+    final now = DateTime.now();
+
+    if (expiresAtString == null || DateTime.parse(expiresAtString).isBefore(now)) {
+      return await refreshToken();
+    }
+
+    return await storage.read(key: "access_token");
   }
 }

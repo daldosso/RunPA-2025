@@ -18,7 +18,7 @@ class _ChallengeRunScreenState extends State<ChallengeRunScreen> {
   final StravaAuthService stravaAuthService = StravaAuthService();
   List<dynamic> activities = [];
   String? accessToken;
-  final String backendUrl = dotenv.env['STRAVA_API_URL'] ?? '';
+  final String stravaApiUrl = dotenv.env['STRAVA_API_URL'] ?? '';
   final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
   @override
@@ -65,7 +65,7 @@ class _ChallengeRunScreenState extends State<ChallengeRunScreen> {
     if (accessToken == null) return;
 
     final response = await http.get(
-      Uri.parse("$backendUrl/athlete/activities"),
+      Uri.parse("$stravaApiUrl/athlete/activities"),
       headers: {'Authorization': 'Bearer $accessToken'},
     );
 
